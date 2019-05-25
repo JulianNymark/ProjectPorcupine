@@ -8,6 +8,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Linq;
 using ProjectPorcupine.Pathfinding;
 using UnityEngine;
 
@@ -72,7 +73,8 @@ namespace ProjectPorcupine.State
 
                 distToTravel = Mathf.Sqrt(
                     Mathf.Pow(character.CurrTile.X - nextTile.X, 2) +
-                    Mathf.Pow(character.CurrTile.Y - nextTile.Y, 2));
+                    Mathf.Pow(character.CurrTile.Y - nextTile.Y, 2) +
+                    Mathf.Pow(character.CurrTile.Z - nextTile.Z, 2));
 
                 if (nextTile.IsEnterable() == Enterability.Yes)
                 {
@@ -85,7 +87,7 @@ namespace ProjectPorcupine.State
                     //            so that we don't waste a bunch of time walking towards a dead end.
                     //            To save CPU, maybe we can only check every so often?
                     //            Or maybe we should register a callback to the OnTileChanged event?
-                    // Debug.ULogErrorChannel("FIXME", "A character was trying to enter an unwalkable tile.");
+                    // UnityDebugger.Debugger.LogErrorChannel("FIXME", "A character was trying to enter an unwalkable tile.");
 
                     // Should the character show that he is surprised to find a wall?
                     Finished();
@@ -145,6 +147,20 @@ namespace ProjectPorcupine.State
             character.IsWalking = false;
 
             VisualPath.Instance.RemoveVisualPoints(character.name);
+        }
+
+        public override void Interrupt()
+        {
+            if (path != null)
+            {
+                Tile goal = path.Last();
+                if (goal.Inventory != null)
+                {
+                    goal.Inventory.ReleaseClaim(character);
+                }
+            }
+
+            base.Interrupt();
         }
 
         private void AdvanceNextTile()
